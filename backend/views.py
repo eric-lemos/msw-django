@@ -35,7 +35,7 @@ class views:
     class event:
     #========================= EVENTS =====================#   
         class device:
-        #------------------------- DEVICE -----------------#
+        #--------------------- DEVICE ---------------------#
             @staticmethod
             def ping(value):
                 log.debug(subsys="Device.ping", desc=value)
@@ -57,7 +57,7 @@ class views:
                 log.debug(subsys="Device.clock_freq", desc=value)
 
         class receive:
-            #------------------------- RECEIVE ----------------#
+        #--------------------- RECEIVE --------------------#
             @staticmethod
             def id(value):
                 log.debug(subsys="Receiver.id", desc=value)
@@ -135,3 +135,19 @@ class views:
                 if(status == True): value = f"[{detail.upper()}] Microphone {name} '{alias}' has been turned on"
                 else: value = f"[{detail.upper()}] Microphone {name} '{alias}' has been turned off"
                 log.info(subsys="Receiver.is_online", desc=value, save=True)
+    
+    class streaming:
+    #========================= STREAMING ==================#
+        class audit:
+        #--------------------- AUDIT ----------------------#
+            @staticmethod
+            def get():
+                value = "Device id does not match what was defined in the object."
+                log.debug(subsys="em6000.getAudit", desc=value)
+        
+        class zabbix:
+        #--------------------- ZABBIX ---------------------#
+            @staticmethod
+            def get():
+                value = "Device id does not match what was defined in the object."
+                log.debug(subsys="em6000.getZabbix", desc=value)
