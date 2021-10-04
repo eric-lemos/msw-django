@@ -130,3 +130,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Time to send messages to receiver
 TRANSMITTER_TIME = 5
 SUBSCRIBE_TIME = 15
+
+# Routes to flask resources
+API_ROUTES = {
+    "overview": {
+        "get": "/msw/stream/overview"
+    },
+
+    "audit": {
+        "get": "/msw/stream/audit/",
+        "post": "/msw/stream/audit/post"
+    },
+
+    "zabbix": {
+        "get": "/msw/api/zabbix/state/<int:id>"
+    }
+}

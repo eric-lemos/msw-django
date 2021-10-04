@@ -151,3 +151,20 @@ class views:
             def get():
                 value = "Device id does not match what was defined in the object."
                 log.debug(subsys="em6000.getZabbix", desc=value)
+    
+    class server:
+    #========================= SERVER =====================#
+        @staticmethod
+        def started():
+            value = "WSGI serving on http://[::]:5000"
+            log.info(subsys="stream.MSWStartServer", desc=value, save=True)
+            
+        @staticmethod
+        def keyInterrupt():
+            value = "WSGI server was terminated from keyboard."
+            log.warning(subsys="stream.MSWStartServer", desc=value, save=True)
+        
+        @staticmethod
+        def exceptions(e):
+            value = f"Error trying to start WSGI server. Exceptions: \n {e} \n\n"
+            log.error(subsys="stream.MSWStartServer", desc=value, save=True)

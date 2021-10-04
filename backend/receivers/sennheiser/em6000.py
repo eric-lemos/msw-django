@@ -43,16 +43,24 @@ class em6000(Sennheiser):
         ###################### COMMANDS ####################
         if(command == "gain"):
             #................. GAIN .......................#
-            if(mic == self.rx1.id): self.post({"audio":{"out1":{"level_db": int(value)}}})
-            if(mic == self.rx2.id): self.post({"audio":{"out2":{"level_db": int(value)}}})
+            if(mic == self.rx1.id):
+                self.post({"audio":{"out1":{"level_db": int(value)}}})
+
+            elif(mic == self.rx2.id):
+                self.post({"audio":{"out2":{"level_db": int(value)}}})
 
         return {"status": "success"}
 
-    def getZabbix(self, device, mic):
-        #--------------------- ZABBIX ---------------------#
-        if((device == self.dev.id) and (mic == self.rx1.id)): return self.rx1.zabbix(self.dev.ping)
-        elif((device == self.dev.id) and (mic == self.rx2.id)): return self.rx2.zabbix(self.dev.ping)
-        else: views.streaming.zabbix.get()
+    #------------------------- ZABBIX ---------------------#
+    def getZabbix(self, device, request_id):
+        if((device == self.dev.id) and (request_id == self.rx1.id)):
+            return self.rx1.zabbix(self.dev.ping)
+
+        elif((device == self.dev.id) and (request_id == self.rx2.id)):
+            return self.rx2.zabbix(self.dev.ping)
+
+        else:
+            views.streaming.zabbix.get()
 
     #========================= SENDERS ====================#
     def checkName(self):
@@ -339,8 +347,7 @@ class em6000(Sennheiser):
 
     def params(self):
         #--------------------- PARAMS ---------------------#
-        params = Models.objects.order_by("id").filter(
-            model=self.dev.model.upper())
+        params = Models.objects.order_by("id").filter(model=self.dev.model)
 
         if(params):
             for param in params:
