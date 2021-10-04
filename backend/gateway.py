@@ -13,7 +13,7 @@ class Gateway:
 
     #========================= AUXILIARY ==================#
     @staticmethod
-    def check(data, keys):
+    def checkPost(data, keys):
         if(data is not None):
             numKeys = len(keys)
             for i in range(numKeys):
@@ -48,14 +48,15 @@ class Gateway:
     #~~~~~~~~~~~~~~~~~~~~~~~~~ POST ~~~~~~~~~~~~~~~~~~~~~~~#
     def postAudit(self, data):
         keys = ["id", "mic", "cmd", "value"]
-        result = self.check(data, keys)
+        result = self.checkPost(data, keys)
+
         if(result["status"] == "success"):
             for device in self.devices:
                 if(self.objects[device.id] is not None):
                     if(data["id"] == self.objects[device.id].dev.id):
                         return self.objects[device.id].postAudit(data["mic"], data["cmd"], data["value"])
-                    else: return {"status": "error"}
-                else: return {"status": "error"} 
+                    else: return {"status": "error", "desc": views.streaming.audit.post.null_object()}
+                else: return {"status": "error", "desc": views.streaming.audit.post.not_exist()}
 
     #------------------------- ZABBIX ---------------------#
     def getZabbix(self, request_id):

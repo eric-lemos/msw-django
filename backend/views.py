@@ -8,17 +8,17 @@ class views:
         @staticmethod
         def post():
             value = "Method 'post' not defined."
-            log.debug(subsys="Protocol.post", desc=value)
+            log.info(subsys="Protocol.post", desc=value)
         
         @staticmethod
         def send():
             value = "Method 'send' not defined."
-            log.debug(subsys="Protocol.send", desc=value)
+            log.info(subsys="Protocol.send", desc=value)
         
         @staticmethod
         def read():
             value = "Method 'read' not defined."
-            log.debug(subsys="Protocol.read", desc=value)
+            log.info(subsys="Protocol.read", desc=value)
     
     class ping:
     #========================= PING =======================#
@@ -104,7 +104,7 @@ class views:
             
             @staticmethod
             def alias(value):
-                log.info(subsys="Receiver.alias", desc=value)
+                log.debug(subsys="Receiver.alias", desc=value)
             
             @staticmethod
             def detail(value):
@@ -141,16 +141,35 @@ class views:
         class audit:
         #--------------------- AUDIT ----------------------#
             @staticmethod
-            def get():
+            def get(model):
                 value = "Device id does not match what was defined in the object."
-                log.debug(subsys="em6000.getAudit", desc=value)
-        
+                log.error(subsys=f"{model}.getAudit", desc=value, save=True)
+
+            class post:
+                @staticmethod
+                def not_exist():
+                    value = "Requested microphone does not exist."
+                    log.error(subsys="Gateway.postAudit", desc=value, save=True)
+                    return value
+                
+                @staticmethod
+                def null_object():
+                    value = "Error trying to change nullo object."
+                    log.error(subsys="Gateway.postAudit", desc=value, save=True)
+                    return value
+                
+                @staticmethod
+                def out_range(model):
+                    value = "Value set out of range allowed by the device."
+                    log.warning(subsys=f"{model}.postAudit", desc=value, save=True)
+                    return value
+
         class zabbix:
         #--------------------- ZABBIX ---------------------#
             @staticmethod
-            def get():
+            def get(model):
                 value = "Device id does not match what was defined in the object."
-                log.debug(subsys="em6000.getZabbix", desc=value)
+                log.error(subsys=f"{model}.getZabbix", desc=value, save=True)
     
     class server:
     #========================= SERVER =====================#

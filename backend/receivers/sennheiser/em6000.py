@@ -36,31 +36,27 @@ class em6000(Sennheiser):
                 "device": self.dev.audit(),
                 "mic": self.rx2.audit()
             }
-        else: views.streaming.audit.get()
+        else:
+            views.streaming.audit.get(self.dev.model)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~ POST ~~~~~~~~~~~~~~~~~~~~~~~#
     def postAudit(self, mic, command, value):
-        ###################### COMMANDS ####################
+        value = int(value)
+        
         if(command == "gain"):
-            #................. GAIN .......................#
-            if(mic == self.rx1.id):
-                self.post({"audio":{"out1":{"level_db": int(value)}}})
+            if((value >= self.dev.min_gain) and (value <= self.dev.max_gain)):
+                if(mic == self.rx1.id): self.post({"audio":{"out1":{"level_db": value}}})
+                elif(mic == self.rx2.id): self.post({"audio":{"out2":{"level_db": value}}})
+            else: return {"status": "error", "desc": views.streaming.audit.post.out_range(self.dev.model)}
 
-            elif(mic == self.rx2.id):
-                self.post({"audio":{"out2":{"level_db": int(value)}}})
-
+        #elif(command == "n"): pass
         return {"status": "success"}
 
     #------------------------- ZABBIX ---------------------#
     def getZabbix(self, device, request_id):
-        if((device == self.dev.id) and (request_id == self.rx1.id)):
-            return self.rx1.zabbix(self.dev.ping)
-
-        elif((device == self.dev.id) and (request_id == self.rx2.id)):
-            return self.rx2.zabbix(self.dev.ping)
-
-        else:
-            views.streaming.zabbix.get()
+        if((device == self.dev.id) and (request_id == self.rx1.id)): return self.rx1.zabbix(self.dev.ping)
+        elif((device == self.dev.id) and (request_id == self.rx2.id)): return self.rx2.zabbix(self.dev.ping)
+        else: views.streaming.zabbix.get(self.dev.model)
 
     #========================= SENDERS ====================#
     def checkName(self):
