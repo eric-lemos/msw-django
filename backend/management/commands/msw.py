@@ -12,6 +12,3 @@ class Command(BaseCommand):
             serve(wsgi_app, listen="*:5000", threads=12)
         except (KeyboardInterrupt): views.server.keyInterrupt()
         except Exception as e: views.server.exceptions(e)
-
-        #========================= TESTS ==================#
-        #g = Gateway()

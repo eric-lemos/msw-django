@@ -34,8 +34,8 @@ class views:
 
     class event:
     #========================= EVENTS =====================#   
-        class device:
         #--------------------- DEVICE ---------------------#
+        class device:
             @staticmethod
             def ping(value):
                 log.debug(subsys="Device.ping", desc=value)
@@ -56,8 +56,8 @@ class views:
             def clock_freq(value):
                 log.debug(subsys="Device.clock_freq", desc=value)
 
-        class receive:
         #--------------------- RECEIVE --------------------#
+        class receive:
             @staticmethod
             def id(value):
                 log.debug(subsys="Receiver.id", desc=value)
@@ -93,7 +93,11 @@ class views:
             @staticmethod
             def mute(value):
                 log.debug(subsys="Receiver.mute", desc=value)
-            
+
+            @staticmethod
+            def group(value):
+                log.debug(subsys="Receiver.group", desc=value)
+
             @staticmethod
             def audio(value):
                 log.debug(subsys="Receiver.audio", desc=value)
@@ -136,40 +140,25 @@ class views:
                 else: value = f"[{detail.upper()}] Microphone {name} '{alias}' has been turned off"
                 log.info(subsys="Receiver.is_online", desc=value, save=True)
     
-    class streaming:
-    #========================= STREAMING ==================#
-        class audit:
-        #--------------------- AUDIT ----------------------#
-            @staticmethod
-            def get(model):
-                value = "Device id does not match what was defined in the object."
-                log.error(subsys=f"{model}.getAudit", desc=value, save=True)
-
-            class post:
-                @staticmethod
-                def not_exist():
-                    value = "Requested microphone does not exist."
-                    log.error(subsys="Gateway.postAudit", desc=value, save=True)
-                    return value
-                
-                @staticmethod
-                def null_object():
-                    value = "Error trying to change nullo object."
-                    log.error(subsys="Gateway.postAudit", desc=value, save=True)
-                    return value
-                
-                @staticmethod
-                def out_range(model):
-                    value = "Value set out of range allowed by the device."
-                    log.warning(subsys=f"{model}.postAudit", desc=value, save=True)
-                    return value
-
-        class zabbix:
-        #--------------------- ZABBIX ---------------------#
-            @staticmethod
-            def get(model):
-                value = "Device id does not match what was defined in the object."
-                log.error(subsys=f"{model}.getZabbix", desc=value, save=True)
+    class audit:
+    #========================= AUDIT ======================#
+        @staticmethod
+        def not_exist():
+            value = "Requested microphone does not exist."
+            log.error(subsys="Gateway.postAudit", desc=value)
+            return value
+        
+        @staticmethod
+        def null_object():
+            value = "Error trying to change null object."
+            log.error(subsys="Gateway.postAudit", desc=value)
+            return value
+        
+        @staticmethod
+        def out_range(model):
+            value = "Value set out of range allowed by the device."
+            log.warning(subsys=f"{model}.postAudit", desc=value)
+            return value
     
     class server:
     #========================= SERVER =====================#

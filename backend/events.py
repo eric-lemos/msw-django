@@ -7,7 +7,7 @@ class Device:
         self._id = 0
         self._host = ""
         self._port = 0
-        self._ping = ""
+        self._ping = "not-configured"
         self._name = ""
         self._alias = ""
         self._model = ""
@@ -219,6 +219,7 @@ class Receive:
         self._name = ""
         self._gain = 0
         self._dev = device
+        self._group = "unknown"
         self._mute = False
         self._audio = 0
         self._level = 0
@@ -281,6 +282,10 @@ class Receive:
     @property
     def mute(self): 
         return self._mute
+
+    @property
+    def group(self): 
+        return self._group
 
     @property
     def audio(self): 
@@ -406,6 +411,14 @@ class Receive:
             else: 
                 self._mute = value
                 views.event.receive.mute(self.mute)
+
+    @group.setter
+    def group(self, value):
+        if(self.group != value): 
+            if(not value): self._group = "unknown"
+            else:
+                self._group = value
+                views.event.receive.group(self.group)
 
     @audio.setter
     def audio(self, value):
@@ -541,6 +554,7 @@ class Receive:
             "alias": self.alias,
             "status": self.status,
             "battery": self.battery,
+            "group": self.group,
             "carrier": self.carrier,
             "warnings": self.warnings,
             "is_online": self.is_online,
@@ -563,6 +577,7 @@ class Receive:
             "alias": self.alias,
             "detail": self.detail,
             "status": self.status,
+            "group": self.group,
             "carrier": self.carrier,
             "battery": self.battery,
             "capsule": self.capsule,
@@ -582,6 +597,7 @@ class Receive:
             "alias": self.alias,
             "detail": self.detail,
             "ping": self.checkPing(ping),
+            "group": self.group,
             "carrier": self.carrier,
             "level_db": self.level,
             "audio": self.audio,

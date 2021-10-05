@@ -12,8 +12,70 @@ class em6000(Sennheiser):
         self.init(id, model, alias)
         self.threads()
 
-    #========================= STREAMING ==================#
-    #------------------------- OVERVIEW -------------------#
+    def init(self, id, model, alias):
+        self.dev = Device()
+        self.rx1 = Receive(self.dev)
+        self.rx2 = Receive(self.dev)
+        self.dev.host = self.host
+        self.dev.port = self.port
+        self.dev.model = model
+        self.dev.alias = alias
+        self.dev.id = id
+        self.params()
+        self.mics()
+
+    def params(self):
+        params = Models.objects.order_by("id").filter(model=self.dev.model)
+
+        if(params):
+            for param in params:
+                self.dev.max_audio = param.max_aud
+                self.dev.min_audio = param.min_aud
+                self.dev.max_gain = param.max_gain
+                self.dev.min_gain = param.min_gain
+                self.dev.max_rf = param.max_rf
+                self.dev.min_rf = param.min_rf
+
+    def mics(self):
+        mics_query = Mics.objects.order_by("id").filter(device_id=self.dev.id)
+
+        if(not mics_query):
+            Mics(name="mic001", detail="rx1", device_id=self.dev.id).save()
+            Mics(name="mic002", detail="rx2", device_id=self.dev.id).save()
+            mics_query = Mics.objects.order_by("id").filter(device_id=self.dev.id)
+
+        if(mics_query):
+            for mic in mics_query:
+                if(mic.detail == "rx1"):
+                    if(mic.alias): self.rx1.alias = mic.alias
+                    self.rx1.detail = mic.detail
+                    self.rx1.name = mic.name
+                    self.rx1.id = mic.id
+                    
+                elif(mic.detail == "rx2"):
+                    if(mic.alias): self.rx2.alias = mic.alias
+                    self.rx2.detail = mic.detail
+                    self.rx2.name = mic.name
+                    self.rx2.id = mic.id
+
+    def threads(self):
+        Thread(target=self.ping).start()
+        Thread(target=self.receiver).start()
+        Thread(target=self.checkName).start()
+        Thread(target=self.checkMute).start()
+        Thread(target=self.checkGain).start()
+        Thread(target=self.checkLevel).start()
+        Thread(target=self.checkClock).start()
+        Thread(target=self.checkStatus).start()
+        Thread(target=self.checkCarrier).start()
+        Thread(target=self.checkBattery).start()
+        Thread(target=self.checkCapsule).start()
+        Thread(target=self.checkSysName).start()
+        Thread(target=self.checkMetering).start()
+        Thread(target=self.checkWarnings).start()
+        Thread(target=self.checkClockFreq).start()
+
+    #========================= OVERVIEW ===================#
     def getOverview(self):
         return {
             "device": self.dev.overview(),
@@ -23,8 +85,7 @@ class em6000(Sennheiser):
             }
         }
 
-    #------------------------- AUDIT ----------------------#
-    #~~~~~~~~~~~~~~~~~~~~~~~~~ GET ~~~~~~~~~~~~~~~~~~~~~~~~#
+    #========================= AUDIT ======================#
     def getAudit(self, device, mic):
         if((device == self.dev.id) and (mic == self.rx1.id)):
             return {
@@ -36,10 +97,7 @@ class em6000(Sennheiser):
                 "device": self.dev.audit(),
                 "mic": self.rx2.audit()
             }
-        else:
-            views.streaming.audit.get(self.dev.model)
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~ POST ~~~~~~~~~~~~~~~~~~~~~~~#
     def postAudit(self, mic, command, value):
         value = int(value)
         
@@ -47,20 +105,18 @@ class em6000(Sennheiser):
             if((value >= self.dev.min_gain) and (value <= self.dev.max_gain)):
                 if(mic == self.rx1.id): self.post({"audio":{"out1":{"level_db": value}}})
                 elif(mic == self.rx2.id): self.post({"audio":{"out2":{"level_db": value}}})
-            else: return {"status": "error", "desc": views.streaming.audit.post.out_range(self.dev.model)}
+            else: return {"status": "error", "desc": views.audit.out_range(self.dev.model)}
 
         #elif(command == "n"): pass
         return {"status": "success"}
 
-    #------------------------- ZABBIX ---------------------#
+    #========================= ZABBIX =====================#
     def getZabbix(self, device, request_id):
         if((device == self.dev.id) and (request_id == self.rx1.id)): return self.rx1.zabbix(self.dev.ping)
         elif((device == self.dev.id) and (request_id == self.rx2.id)): return self.rx2.zabbix(self.dev.ping)
-        else: views.streaming.zabbix.get(self.dev.model)
 
     #========================= SENDERS ====================#
     def checkName(self):
-        #--------------------- RX-NAME --------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"skx":{"name":null}}}')
@@ -68,7 +124,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
 
     def checkMute(self):
-        #--------------------- RX-MUTE --------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"audio_mute":null}}')
@@ -76,7 +131,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
 
     def checkGain(self):
-        #--------------------- RX-GAIN --------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"skx":{"gain":null}}}')
@@ -84,7 +138,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
 
     def checkLevel(self):
-        #--------------------- RX-LEVEL -------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"audio":{"out1":{"level_db":null}}}')
@@ -92,7 +145,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
 
     def checkStatus(self):
-        #--------------------- RX-STATUS ------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"active_status":null}}')
@@ -100,7 +152,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
 
     def checkCarrier(self):
-        #--------------------- RX-CARRIER -----------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"carrier":null}}')
@@ -108,7 +159,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
     
     def checkBattery(self):
-        #--------------------- RX-BATTERY -----------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"skx":{"battery":null}}}')
@@ -116,7 +166,6 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
     
     def checkCapsule(self):
-        #--------------------- RX-CAPSULE -----------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"skx":{"capsule":null}}}')
@@ -124,14 +173,12 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
     
     def checkMetering(self):
-        #--------------------- RX-METERING ----------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"osc":{"state":{"subscribe":[{"#":{"min":480,"max":480,"lifetime":15,"count":1000},"mm":null}]}}}')
             sleep(SUBSCRIBE_TIME)
 
     def checkWarnings(self):
-        #--------------------- RX-WARNINGS ----------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"rx1":{"active_warnings":null}}')
@@ -139,30 +186,56 @@ class em6000(Sennheiser):
             sleep(TRANSMITTER_TIME)
     
     def checkSysName(self):
-        #--------------------- SYS-NAME -------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"device":{"name":null}}')
             sleep(TRANSMITTER_TIME)
 
-    def checkClockF(self):
-        #--------------------- SYS-CLOCK-FREQ -------------#
+    def checkClockFreq(self):
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"sys":{"clock_frequency_measured":null}}')
             sleep(TRANSMITTER_TIME)
 
     def checkClock(self):
-        #--------------------- SYS-CLOCK ------------------#
         while(self.running):
             if(self.ping_state == "connected"):
                 self.send('{"sys":{"clock":null}}')
             sleep(TRANSMITTER_TIME)
 
     #========================= RECEIVE ====================#
+    @staticmethod
+    def CheckLink(warnings):
+        if("NoLink" in warnings): return False
+        else: return True
+
+    @staticmethod
+    def lqi(value): return round((value/255)*100, 0)
+
+    @staticmethod
+    def dBFS(value): return (((value+1)/2)-128)
+
+    @staticmethod
+    def dBm(value): return ((value-255)/2)
+
+    @staticmethod
+    def mapping(data, args=[]):
+        index = 0
+        items = len(args)
+        if(args[index] not in data): pass
+        else:
+            while(items > index):
+                for key in data.keys():
+                    if(args[index] != key): index = items
+                    else:
+                        index += 1
+                        data = data[key]
+                        if(index >= items): 
+                            return data
+                 
     def receiver(self):
         while(self.running):
-            try: data, addr = self.read()
+            try: data, addr = self.read_dict()
             except: data, addr = [0, 0]
 
             if((addr == self.address) and (data != 0)):
@@ -288,111 +361,3 @@ class em6000(Sennheiser):
                     dev_clock = self.mapping(data, args=["sys", "clock"])
                     if((dev_clock != None) and (dev_clock == data["sys"]["clock"])):
                         self.dev.clock = dev_clock
-
-    #========================= AUXILIARY ==================#
-    @staticmethod
-    def mapping(data, args=[]):
-        #--------------------- MAPPING --------------------#
-        index = 0
-        items = len(args)
-        if(args[index] not in data): pass
-        else:
-            while(items > index):
-                for key in data.keys():
-                    if(args[index] != key): index = items
-                    else:
-                        index += 1
-                        data = data[key]
-                        if(index >= items): 
-                            return data
-                 
-    @staticmethod
-    def CheckLink(warnings):
-        #--------------------- CHECK-LINK -----------------#
-        if("NoLink" in warnings): return False
-        else: return True
-
-    @staticmethod
-    def lqi(value):
-        #--------------------- LQI-CALC -------------------#
-        return round((value/255)*100, 0)
-
-    @staticmethod
-    def dBFS(value): 
-        #--------------------- DBFS-CALC ------------------#
-        return (((value+1)/2)-128)
-
-    @staticmethod
-    def dBm(value):
-        #--------------------- DBM-CALC -------------------#
-        return ((value-255)/2)
-
-    #========================= CONSTRUCTOR ================#
-    def init(self, id, model, alias):
-        #--------------------- INIT -----------------------#
-        self.dev = Device()
-        self.rx1 = Receive(self.dev)
-        self.rx2 = Receive(self.dev)
-        self.dev.host = self.host
-        self.dev.port = self.port
-        self.dev.model = model
-        self.dev.alias = alias
-        self.dev.id = id
-        self.params()
-        self.mics()
-
-    def params(self):
-        #--------------------- PARAMS ---------------------#
-        params = Models.objects.order_by("id").filter(model=self.dev.model)
-
-        if(params):
-            for param in params:
-                self.dev.max_audio = param.max_aud
-                self.dev.min_audio = param.min_aud
-                self.dev.max_gain = param.max_gain
-                self.dev.min_gain = param.min_gain
-                self.dev.max_rf = param.max_rf
-                self.dev.min_rf = param.min_rf
-
-    def mics(self):
-        #--------------------- MICS -----------------------#
-        mics_query = Mics.objects.order_by("id").filter(device_id=self.dev.id)
-
-        if(not mics_query):
-            Mics(name="mic001", detail="rx1", device_id=self.dev.id).save()
-            Mics(name="mic002", detail="rx2", device_id=self.dev.id).save()
-            mics_query = Mics.objects.order_by("id").filter(device_id=self.dev.id)
-
-        if(mics_query):
-            for mic in mics_query:
-                if(mic.detail == "rx1"):
-                    if(mic.alias): self.rx1.alias = mic.alias
-                    self.rx1.detail = mic.detail
-                    self.rx1.name = mic.name
-                    self.rx1.id = mic.id
-                    
-                elif(mic.detail == "rx2"):
-                    if(mic.alias): self.rx2.alias = mic.alias
-                    self.rx2.detail = mic.detail
-                    self.rx2.name = mic.name
-                    self.rx2.id = mic.id
-
-    def threads(self):
-        #--------------------- THREADS --------------------#
-        Thread(target=self.ping).start()
-        Thread(target=self.checkName).start()
-        Thread(target=self.checkMute).start()
-        Thread(target=self.checkGain).start()
-        Thread(target=self.checkLevel).start()
-        Thread(target=self.checkStatus).start()
-        Thread(target=self.checkCarrier).start()
-        Thread(target=self.checkBattery).start()
-        Thread(target=self.checkCapsule).start()
-        Thread(target=self.checkMetering).start()
-        Thread(target=self.checkWarnings).start()
-        Thread(target=self.checkSysName).start()
-        Thread(target=self.checkClockF).start()
-        Thread(target=self.checkClock).start()
-        Thread(target=self.receiver).start()
-
-#============================= END ========================#

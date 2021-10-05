@@ -50,6 +50,11 @@ class Udp(Protocol):
 
     def read(self):
         data, addr = self.socket.recvfrom(1024)
+        data = data.decode("utf-8")
+        return [data, addr]
+
+    def read_dict(self):
+        data, addr = self.socket.recvfrom(1024)
         data = loads(data.decode("utf-8"))
         return [data, addr]
     
