@@ -525,7 +525,7 @@ class Receive:
     @property
     def battery_charge(self):
         if(self._dev.model == "em6000"):
-            charge = self.battery[0] 
+            charge = self.battery[0]
             if(charge == "100%"): return 100
             elif(charge == "70%"): return 70
             elif(charge == "30%"): return 30

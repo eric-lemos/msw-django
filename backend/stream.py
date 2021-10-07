@@ -3,6 +3,7 @@ from flask_restful import Resource, Api
 from configs.settings import API_ROUTES
 from backend.gateway import Gateway
 from backend.views import views
+from waitress import serve
 from time import sleep
 
 #========================= INSTANCES ==================#
@@ -41,3 +42,10 @@ class zabbix(Resource):
 streaming.add_resource(audit, API_ROUTES["audit"]["get"], API_ROUTES["audit"]["post"])
 streaming.add_resource(overview, API_ROUTES["overview"]["get"])
 streaming.add_resource(zabbix, API_ROUTES["zabbix"]["get"])
+
+def MSWStartServer():
+    try:
+        views.server.started()
+        serve(wsgi_app, listen="*:5000", threads=12)
+    except (KeyboardInterrupt): views.server.keyInterrupt()
+    except Exception as e: views.server.exceptions(e)
