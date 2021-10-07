@@ -60,64 +60,82 @@ class ur4d(Shure):
                     self.rx2.id = mic.id
     
     def threads(self):
-        #Thread(target=self.ping).start()
-        # Thread(target=self.TxGain).start()
-        # Thread(target=self.TxMute).start()
-        # Thread(target=self.TxGroup).start()
-        Thread(target=self.TxMetering).start()
+        Thread(target=self.ping).start()
+        Thread(target=self.metering).start()
         Thread(target=self.receiver).start()
-        # Thread(target=self.TxBattery).start()
-        # Thread(target=self.TxCapsule).start()
+
+    #========================= OVERVIEW ===================#
+    def getOverview(self):
+        return {
+            "device": self.dev.overview(),
+            "receivers": {
+                "rx1": self.rx1.overview(), 
+                "rx2": self.rx2.overview()
+            }
+        }
+
+    #========================= AUDIT ======================#
+    def getAudit(self, device, mic):
+        if((device == self.dev.id) and (mic == self.rx1.id)):
+            return {
+                "device": self.dev.audit(),
+                "mic": self.rx1.audit()
+            }
+        elif((device == self.dev.id) and (mic == self.rx2.id)):
+            return {
+                "device": self.dev.audit(),
+                "mic": self.rx2.audit()
+            }
+
+    def postAudit(self, mic, command, value):
+        value = int(value)
+        
+        if(command == "gain"):
+            if((value >= self.dev.min_gain) and (value <= self.dev.max_gain)):
+                if(mic == self.rx1.id): self.post({"audio":{"out1":{"level_db": value}}})
+                elif(mic == self.rx2.id): self.post({"audio":{"out2":{"level_db": value}}})
+            else: return {"status": "error", "desc": views.audit.out_range(self.dev.model)}
+
+        #elif(command == "n"): pass
+        return {"status": "success"}
+
+    #========================= ZABBIX =====================#
+    def getZabbix(self, device, request_id):
+        if((device == self.dev.id) and (request_id == self.rx1.id)): return self.rx1.zabbix(self.dev.ping)
+        elif((device == self.dev.id) and (request_id == self.rx2.id)): return self.rx2.zabbix(self.dev.ping)
 
     #========================= SENDERS ====================#
-    def TxGain(self):
+    def metering(self):
         while(self.running):
             if(self.ping_state == "connected"):
-                self.send('* GET 1 AUDIO_GAIN *')
-                self.send('* GET 2 AUDIO_GAIN *')
-            sleep(TRANSMITTER_TIME)
+                self.send('* METER 1 ALL 005 *')
+                self.send('* METER 2 ALL 005 *')
+                sleep(TRANSMITTER_TIME)
     
-    def TxMute(self):
-        while(self.running):
-            if(self.ping_state == "connected"):
-                self.send('* GET 1 MUTE *')
-                self.send('* GET 2 MUTE *')
-            sleep(TRANSMITTER_TIME)
-
-    def TxGroup(self):
-        while(self.running):
-            if(self.ping_state == "connected"):
-                self.send('* GET 1 GROUP_CHAN *')
-                self.send('* GET 2 GROUP_CHAN *')
-            sleep(TRANSMITTER_TIME)
-
-    def TxBattery(self):
-        while(self.running):
-            if(self.ping_state == "connected"):
-                self.send('* GET 1 TX_BAT *')
-                self.send('* GET 2 TX_BAT *')
-            sleep(TRANSMITTER_TIME)
-    
-    def TxCapsule(self):
-        while(self.running):
-            if(self.ping_state == "connected"):
-                self.send('* GET 1 TX_TYPE *')
-                self.send('* GET 2 TX_TYPE *')
-            sleep(TRANSMITTER_TIME)
-
-    def TxMetering(self):
-        print("iniciando metering")
-        self.send('* METER 2 ALL STOP *')
-        self.send('* METER 2 ALL sss *')
-        # while(self.running):
-        #     #if(self.ping_state == "connected"):
-        #     self.send('* METER 1 ALL sss *')
-        #     #self.send('* METER 2 ALL sss *')
-            
-
     #========================= RECEIVE ====================#
     @staticmethod
-    def mute(data):
+    def dBFS(value):
+        value = int(value)
+        return (((value+1)/2)-128)
+
+    @staticmethod
+    def dBm(value):
+        value = int(value)
+        return ((value-255)/2)
+
+    @staticmethod
+    def checkDiv(value):
+        if(value == "AX"): return [1, 0]
+        elif(value == "XB"): return [0, 1]
+        elif(value == "AB"): return [1, 1]
+        else: return [0, 0]
+
+    @staticmethod
+    def checkBattery(value):
+        if(value == "U"): return 0
+
+    @staticmethod
+    def checkMute(data):
         if("OFF" in data): return False
         else: return True
 
@@ -135,35 +153,50 @@ class ur4d(Shure):
             if((addr == self.answer_addr) and (data != 0)):
                 data = data.split()
 
-                #----------------------------- NAME ---------------------------#
-                if("CHAN_NAME" in data[3]):
-                    #......................... PING ...........................#
+                #----------------------------- CAPSULE ------------------------#
+                if("TX_TYPE" in data[3]): # Check if have ping updates #
                     self.recv_ping = time()
                     self.checkDeltaState()
                     self.dev.ping = self.ping_state
 
                     if("1" in data[2]):
+                        self.rx1.capsule = data[4]
+
+                    elif("2" in data[2]):
+                        self.rx2.capsule = data[4]
+
+                #----------------------------- METERING -----------------------#
+                elif("ALL" in data[3]):
+                    div = self.checkDiv(data[4])
+                    if("1" in data[2]):
+                        self.rx1.dva = div[0]
+                        self.rx1.dvb = div[1]
+                        self.rx1.rfa = self.dBm(data[5])
+                        self.rx1.rfb = self.dBm(data[6])
+                        self.rx1.audio = self.dBFS(data[8])
+                        self.rx1.is_online = self.isOnline(data[7])
+                        self.rx1.battery = self.checkBattery(data[7])
+
+                        # print(f"[RX1] DVA={self.rx1.dva} | DVB={self.rx1.dvb} | RFA={self.rx1.rfa} | RFB={self.rx1.rfb} |AUD={self.rx1.audio} | BAT={self.rx1.battery} | ISO={self.rx1.is_online}")
+
+                    elif("2" in data[2]):
+                        self.rx2.dva = div[0]
+                        self.rx2.dvb = div[1]
+                        self.rx2.rfa = self.dBm(data[5])
+                        self.rx2.rfb = self.dBm(data[6])
+                        self.rx2.audio = self.dBFS(data[8])
+                        self.rx2.is_online = self.isOnline(data[7])
+                        self.rx2.battery = self.checkBattery(data[7])
+
+                        # print(f"[RX2] DVA={self.rx2.dva} | DVB={self.rx2.dvb} | RFA={self.rx2.rfa} | RFB={self.rx2.rfb} |AUD={self.rx2.audio} | BAT={self.rx2.battery} | ISO={self.rx2.is_online}")
+                    
+                #----------------------------- NAME ---------------------------#
+                elif("CHAN_NAME" in data[3]):
+                    if("1" in data[2]):
                         self.rx1.alias = str(data[4])
 
                     elif("2" in data[2]):
                         self.rx2.alias = str(data[4])
-
-                #----------------------------- METERING -----------------------#
-                elif("ALL" in data[3]):
-                    # nn = diversity
-                    # aaa = value of the RF level A
-                    # bbb = value of the RF level B
-                    # d = battery level
-                    # eee = audio level (000-255)
-                    print(
-                    f"nn = {data[4]} | aaa = {data[5]} | bbb = {data[6]} | d = {data[7]} | eee = {data[8]}" 
-                    )
-
-                    # if("1" in data[2]):
-                    #     self.rx1.gain = data[4]
-
-                    # elif("2" in data[2]):
-                    #     self.rx2.gain = data[4]
 
                 #----------------------------- GAIN ---------------------------#
                 elif("AUDIO_GAIN" in data[3]):
@@ -176,41 +209,23 @@ class ur4d(Shure):
                 #----------------------------- MUTE ---------------------------#
                 elif("MUTE" in data[3]):
                     if("1" in data[2]):
-                        self.rx1.mute = self.mute(data[4])
+                        self.rx1.mute = self.checkMute(str(data[4]))
 
                     elif("2" in data[2]):
-                        self.rx2.mute = self.mute(data[4])
+                        self.rx2.mute = self.checkMute(str(data[4]))
                 
                 #----------------------------- GROUP --------------------------#
                 elif("GROUP_CHAN" in data[3]):
                     if("1" in data[2]):
-                        self.rx1.group = (data[4], data["value2"])
+                        self.rx1.group = (int(data[4]), int(data[5]))
 
                     elif("2" in data[2]):
-                        self.rx2.group = (data[4], data["value2"])
+                        self.rx2.group = (int(data[4]), int(data[5]))
                 
                 #----------------------------- FREQ ---------------------------#
                 elif("FREQUENCY" in data[3]):
                     if("1" in data[2]):
-                        self.rx1.carrier = data[4]
+                        self.rx1.carrier = int(data[4])
 
                     elif("2" in data[2]):
-                        self.rx2.carrier = data[4]
-                
-                #----------------------------- BATTERY ------------------------#
-                elif("TX_BAT" in data[3]):
-                    if("1" in data[2]):
-                        self.rx1.is_online = self.isOnline(data[4])
-                        self.rx1.battery = data[4]
-
-                    elif("2" in data[2]):
-                        self.rx2.is_online = self.isOnline(data[4])
-                        self.rx2.battery = data[4]
-                
-                #----------------------------- TYPE ---------------------------#
-                elif("TX_TYPE" in data[3]):
-                    if("1" in data[2]):
-                        self.rx1.capsule = data[4]
-
-                    elif("2" in data[2]):
-                        self.rx2.capsule = data[4]
+                        self.rx2.carrier = int(data[4])

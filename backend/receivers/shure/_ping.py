@@ -6,8 +6,8 @@ class Shure(Udp):
     def __init__(self, host, port):
         super().__init__(host, port)
         self.ping_state = "not-configured"
-        self.num_ping_received = 0
-        self.max_ping_received = 2
+        self.num_ping_received = int(0)
+        self.max_ping_received = int(3)
         self.num_ping_lost = int(0)
         self.max_ping_lost = int(5)
         self.last_ping = 0
@@ -41,8 +41,8 @@ class Shure(Udp):
 
     def ping(self):
         while(self.running):
-            self.send('* GET 1 CHAN_NAME *')
-            self.send('* GET 2 CHAN_NAME *')
+            self.send('* GET 1 TX_TYPE *')
+            self.send('* GET 2 TX_TYPE *')
             self.last_ping = time()
             self.checkDeltaState()
             sleep(1)

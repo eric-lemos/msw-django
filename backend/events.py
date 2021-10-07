@@ -359,7 +359,6 @@ class Receive:
     def rfa_p(self, value):
         if(self.rfa_p != value):
             self._rfa_p = self.percent(value, self._dev.min_rf, self._dev.max_rf)
-            #print(self.rfa_p)
     
     @rfb_p.setter
     def rfb_p(self, value):
@@ -525,12 +524,22 @@ class Receive:
     #------------------------- BATTERY-CHARGE -------------#
     @property
     def battery_charge(self):
-        charge = self.battery[0] 
-        if(charge == "100%"): return 100
-        elif(charge == "70%"): return 70
-        elif(charge == "30%"): return 30
-        elif(charge == "low"): return 10
-        else: return 0
+        if(self._dev.model == "em6000"):
+            charge = self.battery[0] 
+            if(charge == "100%"): return 100
+            elif(charge == "70%"): return 70
+            elif(charge == "30%"): return 30
+            elif(charge == "low"): return 10
+            else: return 0
+
+        elif(self._dev.model == "ur4d"):
+            charge = self.battery
+            if(charge == "5"): return 100
+            elif(charge == "4"): return 80
+            elif(charge == "3"): return 60
+            elif(charge == "2"): return 40
+            elif(charge == "1"): return 20
+            else: return 0
 
     #------------------------- WARNINGS -------------------#
     def checkWarning(self, warning):
@@ -541,7 +550,6 @@ class Receive:
     def checkPing(self, value):
         if(value == "connected"): return 1
         else: return 0
-
 
     #========================= STREAMING ==================#
     #------------------------- OVERVIEW -------------------#
@@ -559,7 +567,6 @@ class Receive:
             "warnings": self.warnings,
             "is_online": self.is_online,
         }
-
 
     #------------------------- AUDIT ----------------------#
     def audit(self):
@@ -587,7 +594,6 @@ class Receive:
             "rfa_p": self.rfa_p,
             "rfb_p": self.rfb_p,
         }
-
 
     #========================= ZABBIX =====================#
     def zabbix(self, ping):

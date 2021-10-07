@@ -16,8 +16,8 @@ class Gateway:
             if(str(device.model) == "em6000"):
                 self.objects[device.id] = em6000(device.id, device.host, device.port, str(device.model), device.alias)
 
-            # elif(str(device.model) == "ur4d"):
-                # self.objects[device.id] = ur4d(device.id, device.host, device.port, str(device.model), device.alias)
+            elif(str(device.model) == "ur4d"):
+                self.objects[device.id] = ur4d(device.id, device.host, device.port, str(device.model), device.alias)
 
     #========================= OVERVIEW ===================#
     def getOverview(self):
