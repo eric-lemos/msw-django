@@ -18,6 +18,7 @@ class Gateway:
 
             elif(str(device.model) == "ur4d"):
                 self.objects[device.id] = ur4d(device.id, device.host, device.port, str(device.model), device.alias)
+        views.gateway.load(self.objects)
 
     #========================= OVERVIEW ===================#
     def getOverview(self):
@@ -59,8 +60,6 @@ class Gateway:
                 if(self.objects[device.id] is not None):
                     if(data["id"] == self.objects[device.id].dev.id):
                         return self.objects[device.id].postAudit(data["mic"], data["cmd"], data["value"])
-                    else: return {"status": "error", "desc": views.audit.null_object()}
-                else: return {"status": "error", "desc": views.audit.not_exist()}
 
     #========================= ZABBIX =====================#
     def getZabbix(self, request_id):

@@ -160,6 +160,12 @@ class views:
             log.warning(subsys=f"{model}.postAudit", desc=value)
             return value
     
+    class gateway:
+        @staticmethod
+        def load(objects):
+            value = f"Created objects: \n {objects} \n"
+            log.debug(subsys="stream.MSWStartServer", desc=value, save=True)        
+
     class server:
     #========================= SERVER =====================#
         @staticmethod

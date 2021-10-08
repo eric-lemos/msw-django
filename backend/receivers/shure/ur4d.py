@@ -92,8 +92,8 @@ class ur4d(Shure):
         
         if(command == "gain"):
             if((value >= self.dev.min_gain) and (value <= self.dev.max_gain)):
-                if(mic == self.rx1.id): self.post({"audio":{"out1":{"level_db": value}}})
-                elif(mic == self.rx2.id): self.post({"audio":{"out2":{"level_db": value}}})
+                if(mic == self.rx1.id): self.post(f"* SET 1 AUDIO_GAIN {value} *")
+                elif(mic == self.rx2.id): self.post(f"* SET 2 AUDIO_GAIN {value} *")
             else: return {"status": "error", "desc": views.audit.out_range(self.dev.model)}
 
         #elif(command == "n"): pass
@@ -114,14 +114,10 @@ class ur4d(Shure):
     
     #========================= RECEIVE ====================#
     @staticmethod
-    def dBFS(value):
-        value = int(value)
-        return (((value+1)/2)-128)
+    def dBFS(value): return (((int(value)+1)/2)-128)
 
     @staticmethod
-    def dBm(value):
-        value = int(value)
-        return ((value-255)/2)
+    def dBm(value): return ((int(value)-255)/2)
 
     @staticmethod
     def checkDiv(value):
@@ -131,17 +127,13 @@ class ur4d(Shure):
         else: return [0, 0]
 
     @staticmethod
-    def checkBattery(value):
-        if(value == "U"): return 0
-
-    @staticmethod
     def checkMute(data):
         if("OFF" in data): return False
         else: return True
 
     @staticmethod
-    def isOnline(data):
-        if("U" in data): return False
+    def isOnline(value):
+        if("U" in value): return False
         else: return True
 
     def receiver(self):
@@ -175,9 +167,7 @@ class ur4d(Shure):
                         self.rx1.rfb = self.dBm(data[6])
                         self.rx1.audio = self.dBFS(data[8])
                         self.rx1.is_online = self.isOnline(data[7])
-                        self.rx1.battery = self.checkBattery(data[7])
-
-                        # print(f"[RX1] DVA={self.rx1.dva} | DVB={self.rx1.dvb} | RFA={self.rx1.rfa} | RFB={self.rx1.rfb} |AUD={self.rx1.audio} | BAT={self.rx1.battery} | ISO={self.rx1.is_online}")
+                        self.rx1.battery = data[7]
 
                     elif("2" in data[2]):
                         self.rx2.dva = div[0]
@@ -186,9 +176,7 @@ class ur4d(Shure):
                         self.rx2.rfb = self.dBm(data[6])
                         self.rx2.audio = self.dBFS(data[8])
                         self.rx2.is_online = self.isOnline(data[7])
-                        self.rx2.battery = self.checkBattery(data[7])
-
-                        # print(f"[RX2] DVA={self.rx2.dva} | DVB={self.rx2.dvb} | RFA={self.rx2.rfa} | RFB={self.rx2.rfb} |AUD={self.rx2.audio} | BAT={self.rx2.battery} | ISO={self.rx2.is_online}")
+                        self.rx2.battery = data[7]
                     
                 #----------------------------- NAME ---------------------------#
                 elif("CHAN_NAME" in data[3]):
@@ -201,10 +189,10 @@ class ur4d(Shure):
                 #----------------------------- GAIN ---------------------------#
                 elif("AUDIO_GAIN" in data[3]):
                     if("1" in data[2]):
-                        self.rx1.gain = data[4]
+                        self.rx1.gain = int(data[4])
 
                     elif("2" in data[2]):
-                        self.rx2.gain = data[4]
+                        self.rx2.gain = int(data[4])
                 
                 #----------------------------- MUTE ---------------------------#
                 elif("MUTE" in data[3]):

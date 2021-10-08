@@ -542,7 +542,7 @@ class Receive:
             else: return 0
 
     #------------------------- WARNINGS -------------------#
-    def checkWarning(self, warning):
+    def checkWarning(self, warning): # EM6000 Function
         if(warning in self.warnings): return 1
         else: return 0
 
@@ -597,29 +597,46 @@ class Receive:
 
     #========================= ZABBIX =====================#
     def zabbix(self, ping):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "alias": self.alias,
-            "detail": self.detail,
-            "ping": self.checkPing(ping),
-            "group": self.group,
-            "carrier": self.carrier,
-            "level_db": self.level,
-            "audio": self.audio,
-            "rf_a": self.rfa,
-            "rf_b": self.rfb,
-            "lqi": self.lqi,
-            "capsule": self.capsule,
-            "battery_time": self.battery_time,
-            "battery_charge": self.battery_charge,
-            "RFPeak": self.checkWarning("RFPeak"),
-            "AFPeak": self.checkWarning("AFPeak"),
-            "NoLink": self.checkWarning("NoLink"),
-            "NoClock": self.checkWarning("NoClock"),
-            "BadClock": self.checkWarning("BadClock"),
-            "LowSignal": self.checkWarning("LowSignal"),
-            "LowBattery": self.checkWarning("LowBattery"),
-            "Aes256Error": self.checkWarning("Aes256Error"),
-            "AnTxYBNCShorted": self.checkWarning("AnTxYBNCShorted"),
-        }
+        if(self._dev.model == "em6000"):
+            return {
+                "id": self.id,
+                "name": self.name,
+                "alias": self.alias,
+                "detail": self.detail,
+                "ping": self.checkPing(ping),
+                "carrier": self.carrier,
+                "level_db": self.level,
+                "audio": self.audio,
+                "rf_a": self.rfa,
+                "rf_b": self.rfb,
+                "lqi": self.lqi,
+                "capsule": self.capsule,
+                "battery_time": self.battery_time,
+                "battery_charge": self.battery_charge,
+                "RFPeak": self.checkWarning("RFPeak"),
+                "AFPeak": self.checkWarning("AFPeak"),
+                "NoLink": self.checkWarning("NoLink"),
+                "NoClock": self.checkWarning("NoClock"),
+                "BadClock": self.checkWarning("BadClock"),
+                "LowSignal": self.checkWarning("LowSignal"),
+                "LowBattery": self.checkWarning("LowBattery"),
+                "Aes256Error": self.checkWarning("Aes256Error"),
+                "AnTxYBNCShorted": self.checkWarning("AnTxYBNCShorted"),
+            }
+        
+        elif(self._dev.model == "ur4d"):
+            return {
+                "id": self.id,
+                "name": self.name,
+                "alias": self.alias,
+                "detail": self.detail,
+                "ping": self.checkPing(ping),
+                "group": self.group,
+                "carrier": self.carrier,
+                "audio": self.audio,
+                "rf_a": self.rfa,
+                "rf_b": self.rfb,
+                "gain": self.gain,
+                "capsule": self.capsule,
+                "battery_charge": self.battery_charge
+            }
