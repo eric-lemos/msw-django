@@ -3,9 +3,8 @@ from datetime import datetime
 
 class Logging:
     def __init__(self, system_name):
-        #self.level = int(Config.objects.get(name="log_level_backend").value)
+        self.level = int(Config.objects.get(name="log_level_backend").value)
         self.system = system_name
-        self.level = 3
 
     @property
     def date_time(self):

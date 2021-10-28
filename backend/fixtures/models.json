@@ -1,0 +1,33 @@
+[
+  {
+    "model": "backend.Models",
+    "pk": 1,
+    "fields": {
+      "manufacturer": "Sennheiser",
+      "model": "em6000",
+      "description": "Digital 2-channel receiver for live productions and transmissions, even in the toughest environments. Huge spectral efficiency with equidistant frequency grid and true bit diversity. Analog and digital outputs (XLR, jack, AES-3, redundant Dante™), high-contrast OLED display with LQI indicator.",
+      "max_rf": -60,
+      "min_rf": -100,
+      "max_aud": 0,
+      "min_aud": -40,
+      "max_gain": 18,
+      "min_gain": -10
+    }
+  },
+
+  {
+    "model": "backend.Models",
+    "pk": 2,
+    "fields": {
+      "manufacturer": "Shure",
+      "model": "ur4d",
+      "description": "The UR4S+ and UR4D+ receivers are part of the flagship UHF-R system and provide single and dual-channel options for premium wireless. As \"+\"-versions these receivers include RF distribution ports that allow up to 10 receivers to share the RF signal from a single pair of antennas.",
+      "max_rf": -60,
+      "min_rf": -100,
+      "max_aud": 0,
+      "min_aud": -40,
+      "max_gain": 18,
+      "min_gain": -10
+    }
+  }
+]

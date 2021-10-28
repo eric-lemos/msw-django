@@ -77,9 +77,9 @@ WSGI_APPLICATION = 'configs.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'PASSWORD': 'built$saud',
-        'HOST': 'localhost',
-        'USER': 'postgres',
+        'PASSWORD': 'Built1$saud',
+        'HOST': '192.168.0.25',
+        'USER': 'saud',
         'NAME': 'msw',
     }
 }
@@ -131,18 +131,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TRANSMITTER_TIME = 5
 SUBSCRIBE_TIME = 15
 
-# Routes to flask resources
-API_ROUTES = {
-    "overview": {
-        "get": "/msw/stream/overview"
+# Endpoints Streaming/RestApi
+ENDPOINTS = {
+    "get": {
+        "zabbix": "/msw/api/zabbix/state/<int:id>",
+        "overview": "/msw/stream/overview/",
+        "audit": "/msw/stream/audit/",
     },
 
-    "audit": {
-        "get": "/msw/stream/audit/",
-        "post": "/msw/stream/audit/post"
-    },
-
-    "zabbix": {
-        "get": "/msw/api/zabbix/state/<int:id>"
+    "post": {
+        "audit": "/msw/stream/audit/post/"
     }
 }

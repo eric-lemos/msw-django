@@ -35,25 +35,40 @@ class Device:
 
     #------------------------- AUDIT ----------------------#
     def audit(self):
-        return {
-            "id": self.id,
-            "model": self.model,
-            "alias": self.alias,
-            "host": self.host,
-            "port": self.port,
-            "ping": self.ping,
+        if(self.model == "em6000"):
+            return {
+                "id": self.id,
+                "model": self.model,
+                "alias": self.alias,
+                "host": self.host,
+                "port": self.port,
+                "ping": self.ping,
 
-            "feature": {
-                "min_gain": self.min_gain,
-                "max_gain": self.max_gain,
-            },
+                "feature": {
+                    "min_gain": self.min_gain,
+                    "max_gain": self.max_gain,
+                },
 
-            "system": {
-                "name": self.name,
-                "clock": self.clock,
-                "clock_freq": self.clock_freq
+                "system": {
+                    "name": self.name,
+                    "clock": self.clock,
+                    "clock_freq": self.clock_freq
+                }
             }
-        }
+        elif(self.model == "ur4d"):
+            return {
+                "id": self.id,
+                "model": self.model,
+                "alias": self.alias,
+                "host": self.host,
+                "port": self.port,
+                "ping": self.ping,
+
+                "feature": {
+                    "min_gain": self.min_gain,
+                    "max_gain": self.max_gain,
+                }
+            }
 
     #========================= GETTERS ====================#
     @property

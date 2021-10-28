@@ -1,0 +1,19 @@
+[
+  {
+    "model": "backend.Config",
+    "pk": "log_level_backend",
+    "fields": {
+      "value": 3,
+      "description": "Sets the log level of the backend system: \n0=none, 1=error, 2=warning, 3=info, 4=debug"
+    }
+  },
+
+  {
+    "model": "backend.Config",
+    "pk": "log_level_frontend",
+    "fields": {
+      "value": 4,
+      "description": "Sets the log level of the frontend system: \n0=none, 1=error, 2=warning, 3=info, 4=debug"
+    }
+  }
+]

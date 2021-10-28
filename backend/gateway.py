@@ -1,12 +1,13 @@
 from backend.receivers.sennheiser.em6000 import em6000
 from backend.receivers.shure.ur4d import ur4d
-from django.db.models import Count
 from backend.models import Devices, Mics
+from backend.monitor import Uptime
 from backend.views import views
 from json import dumps
 
-class Gateway:
+class Gateway(Uptime):
     def __init__(self):
+        super().__init__()
         self.devices = Devices.objects.all()
         self.objects = {}
         self.load()
@@ -18,6 +19,7 @@ class Gateway:
 
             elif(str(device.model) == "ur4d"):
                 self.objects[device.id] = ur4d(device.id, device.host, device.port, str(device.model), device.alias)
+                
         views.gateway.load(self.objects)
 
     #========================= OVERVIEW ===================#

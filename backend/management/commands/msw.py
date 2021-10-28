@@ -1,8 +1,5 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from backend.stream import MSWStartServer
-from backend.gateway import Gateway
-from backend.stream import wsgi_app
-from backend.views import views
 
 class Command(BaseCommand):
 

@@ -164,21 +164,33 @@ class views:
         @staticmethod
         def load(objects):
             value = f"Created objects: \n {objects} \n"
-            log.debug(subsys="stream.MSWStartServer", desc=value, save=True)        
+            log.info(subsys="Gateway.load", desc=value)
 
     class server:
     #========================= SERVER =====================#
         @staticmethod
-        def started():
-            value = "WSGI serving on http://[::]:5000"
-            log.info(subsys="stream.MSWStartServer", desc=value, save=True)
+        def started(server, port):
+            value = f"WSGI serving on http://[::]:{port}"
+            log.info(subsys=f"stream.{server}", desc=value, save=True)
             
         @staticmethod
-        def keyInterrupt():
+        def keyInterrupt(server):
             value = "WSGI server was terminated from keyboard."
-            log.warning(subsys="stream.MSWStartServer", desc=value, save=True)
+            log.warning(subsys=f"stream.{server}", desc=value, save=True)
         
         @staticmethod
-        def exceptions(e):
+        def exceptions(server, e):
             value = f"Error trying to start WSGI server. Exceptions: \n {e} \n\n"
-            log.error(subsys="stream.MSWStartServer", desc=value, save=True)
+            log.error(subsys=f"stream.{server}", desc=value, save=True)
+    
+    class monitor:
+    #========================= MONITOR ====================#
+        class working:
+            def success(message):
+                value = f"{message}"
+                log.info(subsys=f"Monitor.working", desc=value, save=True)
+
+            def exception(message, e=None):
+                value = f"{message}"
+                if(e != None): value += f" Exceptions: \n {e} \n"
+                log.error(subsys=f"Monitor.working", desc=value, save=True)

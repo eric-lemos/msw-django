@@ -8,8 +8,8 @@ class Sennheiser(Udp):
         self.ping_state = "not-configured"
         self.num_ping_received = 0
         self.max_ping_received = 2
-        self.num_ping_lost = int(0)
-        self.max_ping_lost = int(5)
+        self.num_ping_lost = 0
+        self.max_ping_lost = 5
         self.last_ping = 0
         self.recv_ping = 0
 
