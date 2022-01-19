@@ -1,7 +1,7 @@
 # MSW-tradutor
 Software tradutor de API dos receptores Sennheiser/Shure para stream e rest.
 
-### Instalação
+### Instalação Windows
 1. Faça um clone do repositório.
 2. Crie um novo ambiente virtual. `python -m venv venv`
 3. Atualize a versão do pip. `python -m pip install --upgrade pip`
