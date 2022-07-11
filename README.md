@@ -1,4 +1,4 @@
-# MSW-tradutor
+# MSW Gateway
 Software tradutor de API dos receptores Sennheiser/Shure para stream e rest.
 
 ### Instalação Windows
